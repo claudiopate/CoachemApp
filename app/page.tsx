@@ -11,10 +11,10 @@ export default function Home() {
             <span className="text-xl font-bold text-primary">CourtTime</span>
           </div>
           <nav className="flex items-center gap-4">
-            <Link href="/login">
+            <Link href="/sign-in">
               <Button variant="ghost">Log in</Button>
             </Link>
-            <Link href="/register">
+            <Link href="/sign-up">
               <Button>Sign up</Button>
             </Link>
           </nav>
@@ -35,7 +35,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Link href="/register">
+                  <Link href="/sign-up">
                     <Button size="lg" className="gap-1">
                       Get Started <ArrowRight className="h-4 w-4" />
                     </Button>

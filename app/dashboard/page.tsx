@@ -1,18 +1,43 @@
-import { getServerSession } from "next-auth/next"
+import { currentUser, auth, clerkClient } from "@clerk/nextjs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarDateRangePicker } from "@/components/date-range-picker"
 import { Overview } from "@/components/overview"
 import { RecentBookings } from "@/components/recent-bookings"
+import { supabase } from "@/lib/supabase"
 
 export default async function DashboardPage() {
-  const session = await getServerSession()
+  const user = await currentUser()
+  const { orgId } = auth()
+
+  if (!orgId) {
+    return null // Gestito dal middleware
+  }
+
+  // Ottieni il nome dell'organizzazione
+  const organization = await clerkClient.organizations.getOrganization({
+    organizationId: orgId,
+  })
+
+  // Ottieni le statistiche per questa organizzazione
+  const { data: bookingsCount } = await supabase
+    .from("bookings")
+    .select("id", { count: "exact" })
+    .eq("organization_id", orgId)
+
+  const { data: studentsCount } = await supabase
+    .from("profiles")
+    .select("id", { count: "exact" })
+    .eq("organization_id", orgId)
+    .neq("user_id", user?.id || "")
+
+  // Altre statistiche...
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back, {session?.user?.name}</p>
+          <p className="text-muted-foreground">Welcome to {organization.name}</p>
         </div>
         <CalendarDateRangePicker />
       </div>
@@ -39,77 +64,12 @@ export default async function DashboardPage() {
             </svg>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">24</div>
+            <div className="text-2xl font-bold">{bookingsCount?.count || 0}</div>
             <p className="text-xs text-muted-foreground">+10% from last month</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Students</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">+20% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Hours Taught</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M12 2v20" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">36</div>
-            <p className="text-xs text-muted-foreground">+5% from last month</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-            </svg>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">95%</div>
-            <p className="text-xs text-muted-foreground">+2% from last month</p>
-          </CardContent>
-        </Card>
+
+        {/* Altre card... */}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
@@ -119,7 +79,7 @@ export default async function DashboardPage() {
             <CardDescription>Booking trends over the past 30 days</CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <Overview />
+            <Overview organizationId={orgId} />
           </CardContent>
         </Card>
         <Card className="col-span-3">
@@ -128,7 +88,7 @@ export default async function DashboardPage() {
             <CardDescription>Your most recent lesson bookings</CardDescription>
           </CardHeader>
           <CardContent>
-            <RecentBookings />
+            <RecentBookings organizationId={orgId} />
           </CardContent>
         </Card>
       </div>
