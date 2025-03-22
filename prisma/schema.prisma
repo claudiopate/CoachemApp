@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  role          String    @default("student") // "student", "coach", "club"
+  accounts      Account[]
+  sessions      Session[]
+  profile       Profile?
+  bookings      Booking[] @relation("UserBookings")
+  coaching      Booking[] @relation("CoachBookings")
+}
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  phone           String?
+  level           String?  // "beginner", "intermediate", "advanced"
+  preferredSport  String?  // "tennis", "padel"
+  preferredDays   String[] // ["monday", "wednesday", etc.]
+  preferredTimes  String?
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  date        DateTime
+  startTime   DateTime
+  endTime     DateTime
+  type        String   // "tennis", "padel"
+  court       String?
+  status      String   // "pending", "confirmed", "cancelled", "completed"
+  notes       String?  @db.Text
+  userId      String
+  coachId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation("UserBookings", fields: [userId], references: [id])
+  coach       User     @relation("CoachBookings", fields: [coachId], references: [id])
+  attendance  Attendance?
+}
+
+model Attendance {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  status    String   // "attended", "missed", "late"
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model ProgressRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  skill     String
+  level     Int      // 1-10
+  notes     String?  @db.Text
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
