@@ -1,13 +1,20 @@
-import { authMiddleware, clerkClient, createRouteMatcher } from "@clerk/nextjs"
+import { authMiddleware } from "@clerk/nextjs"
+import { clerkClient } from "@clerk/clerk-sdk-node"
+import { NextResponse } from "next/server"
+import { AuthObject } from "@clerk/nextjs/server"
 
 // Definisci le rotte che richiedono ruoli specifici
-const isCoachRoute = createRouteMatcher(["/dashboard/students/*", "/dashboard/calendar"])
+const isCoachRoute = (pathname: string) => {
+  return pathname.startsWith("/dashboard/students/") || pathname === "/dashboard/calendar"
+}
 
-const isAdminRoute = createRouteMatcher(["/dashboard/settings/club/*"])
+const isAdminRoute = (pathname: string) => {
+  return pathname.startsWith("/dashboard/settings/club/")
+}
 
 export default authMiddleware({
   publicRoutes: ["/", "/about", "/api/webhook/clerk"],
-  async afterAuth(auth, req) {
+  async afterAuth(auth: AuthObject & { isPublicRoute: boolean; isApiRoute: boolean }, req: Request) {
     // Gestisci le rotte che richiedono ruoli specifici
     if (!auth.userId && !auth.isPublicRoute) {
       // L'utente non è autenticato e la rotta non è pubblica
@@ -22,27 +29,27 @@ export default authMiddleware({
       if (pathname.startsWith("/dashboard") && pathname !== "/dashboard/organizations") {
         const url = new URL("/dashboard/organizations", req.url)
         url.searchParams.set("redirect_url", pathname)
-        return Response.redirect(url)
+        return NextResponse.redirect(url)
       }
     }
 
     // Verifica i ruoli per le rotte protette
     if (auth.userId && auth.orgId) {
-      const orgMembership = await clerkClient.organizations.getOrganizationMembership({
+      const orgMembership = await clerkClient.organizations.getOrganizationMembershipList({
         organizationId: auth.orgId,
         userId: auth.userId,
       })
 
-      const userRole = orgMembership.role
+      const userRole = orgMembership[0]?.role
       const { pathname } = new URL(req.url)
 
       // Verifica se l'utente ha il ruolo richiesto per la rotta
       if (isCoachRoute(pathname) && userRole !== "admin" && userRole !== "coach") {
-        return Response.redirect(new URL("/dashboard", req.url))
+        return NextResponse.redirect(new URL("/dashboard", req.url))
       }
 
       if (isAdminRoute(pathname) && userRole !== "admin") {
-        return Response.redirect(new URL("/dashboard", req.url))
+        return NextResponse.redirect(new URL("/dashboard", req.url))
       }
     }
   },
