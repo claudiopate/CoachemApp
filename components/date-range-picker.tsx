@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { format } from "date-fns"
 import { CalendarIcon } from "lucide-react"
+import { addDays, format } from "date-fns"
+import { it } from "date-fns/locale"
 import type { DateRange } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
@@ -12,8 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 export function CalendarDateRangePicker({ className }: React.HTMLAttributes<HTMLDivElement>) {
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(2023, 0, 20),
-    to: new Date(),
+    from: new Date(),
+    to: addDays(new Date(), 7),
   })
 
   return (
@@ -29,17 +30,17 @@ export function CalendarDateRangePicker({ className }: React.HTMLAttributes<HTML
             {date?.from ? (
               date.to ? (
                 <>
-                  {format(date.from, "LLL dd, y")} - {format(date.to, "LLL dd, y")}
+                  {format(date.from, "d MMM", { locale: it })} - {format(date.to, "d MMM", { locale: it })}
                 </>
               ) : (
-                format(date.from, "LLL dd, y")
+                format(date.from, "d MMMM yyyy", { locale: it })
               )
             ) : (
-              <span>Pick a date</span>
+              <span>Seleziona un intervallo</span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
+        <PopoverContent className="w-auto p-0" align="center">
           <Calendar
             initialFocus
             mode="range"
@@ -47,6 +48,7 @@ export function CalendarDateRangePicker({ className }: React.HTMLAttributes<HTML
             selected={date}
             onSelect={setDate}
             numberOfMonths={2}
+            showOutsideDays={true}
           />
         </PopoverContent>
       </Popover>

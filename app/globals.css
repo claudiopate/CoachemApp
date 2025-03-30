@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 221 83% 53%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -30,9 +30,9 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -72,6 +72,94 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .sidebar-item {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent;
+  }
+
+  .sidebar-item.active {
+    @apply bg-primary/10 text-primary font-medium;
+  }
+
+  .gradient-heading {
+    @apply bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:border-primary/20;
+  }
+
+  .glass-effect {
+    @apply bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border border-white/20 dark:border-gray-800/20;
+  }
+
+  /* Stili aggiuntivi per il calendario */
+  .rdp-months {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .rdp-month {
+    margin: 0.5rem;
+  }
+
+  .rdp-table {
+    width: 100%;
+  }
+
+  .rdp-head_row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    width: 100%;
+  }
+
+  .rdp-head_cell {
+    text-align: center;
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 0.5rem 0;
+    color: var(--muted-foreground);
+  }
+
+  .rdp-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    width: 100%;
+  }
+
+  .rdp-cell {
+    text-align: center;
+    padding: 0;
+  }
+
+  .rdp-day {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    cursor: pointer;
+  }
+
+  .rdp-day_outside {
+    opacity: 0.5;
+  }
+
+  .rdp-day_selected {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .rdp-day_today {
+    background-color: var(--accent);
+    color: var(--accent-foreground);
   }
 }
 

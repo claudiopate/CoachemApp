@@ -1,7 +1,7 @@
 -- Create profiles table
 CREATE TABLE profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id TEXT NOT NULL UNIQUE,
+  user_id UUID NOT NULL UNIQUE,
   phone TEXT,
   level TEXT,
   preferred_sport TEXT,
@@ -22,8 +22,8 @@ CREATE TABLE bookings (
   court TEXT,
   status TEXT NOT NULL,
   notes TEXT,
-  user_id TEXT NOT NULL,
-  coach_id TEXT NOT NULL,
+  user_id UUID NOT NULL,
+  coach_id UUID NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -41,7 +41,7 @@ CREATE TABLE attendance (
 -- Create progress_records table
 CREATE TABLE progress_records (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id TEXT NOT NULL,
+  user_id UUID NOT NULL,
   skill TEXT NOT NULL,
   level INTEGER NOT NULL,
   notes TEXT,
@@ -50,7 +50,7 @@ CREATE TABLE progress_records (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create Row Level Security (RLS) policies
+-- Enable Row Level Security (RLS)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
@@ -118,5 +118,4 @@ CREATE POLICY "Coaches can insert progress records for their students"
     SELECT 1 FROM bookings
     WHERE bookings.user_id = progress_records.user_id
     AND bookings.coach_id = auth.uid()
-  ));
-
+  ))

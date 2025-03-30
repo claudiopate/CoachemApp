@@ -2,29 +2,35 @@ import { NextResponse, NextRequest } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { getAuth } from "@clerk/nextjs/server"
 
-// GET /api/bookings - Ottieni tutte le prenotazioni dell'organizzazione
+// GET /api/profiles - Ottieni tutti i profili dell'organizzazione
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get("search") || ""
-    const { userId, orgId } = getAuth(request)
+    const { orgId } = getAuth(request)
 
-    if (!userId || !orgId) {
+    if (!orgId) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
-    const bookings = await prisma.booking.findMany({
+    const profiles = await prisma.profile.findMany({
       where: {
         organizationId: orgId,
         OR: [
           {
-            userId: {
+            phone: {
               contains: search,
               mode: "insensitive",
             },
           },
           {
-            coachId: {
+            level: {
+              contains: search,
+              mode: "insensitive",
+            },
+          },
+          {
+            preferredSport: {
               contains: search,
               mode: "insensitive",
             },
@@ -32,46 +38,45 @@ export async function GET(request: NextRequest) {
         ],
       },
       orderBy: {
-        date: "desc",
+        createdAt: "desc",
       },
     })
 
-    return NextResponse.json(bookings)
+    return NextResponse.json(profiles)
   } catch (error) {
-    console.error("[BOOKINGS_GET]", error)
+    console.error("[PROFILES_GET]", error)
     return new NextResponse("Internal error", { status: 500 })
   }
 }
 
-// POST /api/bookings - Crea una nuova prenotazione
+// POST /api/profiles - Crea un nuovo profilo
 export async function POST(request: NextRequest) {
   try {
-    const { userId, orgId } = getAuth(request)
-
-    if (!userId || !orgId) {
-      return new NextResponse("Unauthorized", { status: 401 })
+    const { orgId } = getAuth(request)
+    
+    if (!orgId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await request.json()
-    const { userId: bookingUserId, coachId, date, startTime, endTime, type = "lesson", status = "upcoming" } = body
+    const { userId, phone, level, preferredSport, preferredDays, preferredTimes, notes } = body
 
-    const booking = await prisma.booking.create({
+    const profile = await prisma.profile.create({
       data: {
-        userId: bookingUserId,
-        coachId,
+        userId,
+        phone,
+        level,
+        preferredSport,
+        preferredDays,
+        preferredTimes,
+        notes,
         organizationId: orgId,
-        date,
-        startTime,
-        endTime,
-        type,
-        status,
-      },
+      }
     })
 
-    return NextResponse.json(booking)
+    return NextResponse.json(profile, { status: 201 })
   } catch (error) {
-    console.error("[BOOKING_POST]", error)
+    console.error("[PROFILE_POST]", error)
     return new NextResponse("Internal error", { status: 500 })
   }
-}
-
+} 

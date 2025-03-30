@@ -1,57 +1,59 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, TurtleIcon as TennisBall, Calendar, Users, MessageSquare } from "lucide-react"
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-primary">CourtTime</span>
+        <div className="container mx-auto max-w-7xl flex h-16 items-center justify-between px-8">
+          <div className="flex items-center gap-3">
+            <TennisBall className="h-7 w-7 text-primary" />
+            <span className="text-2xl font-bold gradient-heading">CourtTime</span>
           </div>
-          <nav className="flex items-center gap-4">
-            <Link href="/sign-in">
-              <Button variant="ghost">Log in</Button>
+          <nav className="flex items-center gap-6">
+            <Link href="/login">
+              <Button variant="ghost" size="lg" className="text-base font-medium">Accedi</Button>
             </Link>
             <Link href="/sign-up">
-              <Button>Sign up</Button>
+              <Button size="lg" className="text-base font-medium">Registrati</Button>
             </Link>
           </nav>
         </div>
       </header>
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-primary text-primary-foreground">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                    Simplify Tennis & Padel Lesson Bookings
+        <section className="w-full py-16 md:py-24 lg:py-32 bg-gradient-to-b from-background to-primary/5">
+          <div className="container mx-auto max-w-7xl px-8">
+            <div className="grid gap-12 lg:grid-cols-2 items-center">
+              <div className="flex flex-col justify-center space-y-8">
+                <div className="space-y-6">
+                  <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none gradient-heading max-w-[700px]">
+                    Gestisci le tue lezioni di Tennis & Padel con facilità
                   </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    The intelligent platform for coaches and students to manage lessons, track progress, and optimize
-                    schedules.
+                  <p className="text-xl text-muted-foreground md:text-2xl max-w-[600px] leading-relaxed">
+                    La piattaforma intelligente per allenatori e studenti per gestire lezioni, monitorare i progressi e
+                    ottimizzare gli orari.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
                   <Link href="/sign-up">
-                    <Button size="lg" className="gap-1">
-                      Get Started <ArrowRight className="h-4 w-4" />
+                    <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+                      Inizia Ora <ArrowRight className="h-6 w-6 ml-2" />
                     </Button>
                   </Link>
                   <Link href="/about">
-                    <Button size="lg" variant="outline">
-                      Learn More
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6">
+                      Scopri di più
                     </Button>
                   </Link>
                 </div>
               </div>
-              <div className="flex justify-center">
-                <div className="relative w-full max-w-[500px] aspect-square rounded-xl overflow-hidden shadow-xl">
+              <div className="flex justify-center lg:justify-end">
+                <div className="relative w-full max-w-[700px] aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-indigo-500/20"></div>
                   <img
-                    src="/placeholder.svg?height=500&width=500"
-                    alt="Tennis court with players"
+                    src="https://images.unsplash.com/photo-1622279457486-62dcc4a431d6?q=80&w=1470&auto=format&fit=crop"
+                    alt="Coach planning tennis and padel lessons on a digital device"
                     className="object-cover w-full h-full"
                   />
                 </div>
@@ -60,106 +62,64 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Features</h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Everything you need to manage tennis and padel lessons efficiently
+        <section className="w-full py-16 md:py-24 lg:py-32">
+          <div className="container mx-auto max-w-7xl px-8">
+            <div className="flex flex-col items-center justify-center space-y-6 text-center">
+              <div className="space-y-4">
+                <h2 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl gradient-heading">
+                  Funzionalità
+                </h2>
+                <p className="text-xl text-muted-foreground md:text-2xl max-w-[800px] mx-auto leading-relaxed">
+                  Tutto ciò di cui hai bisogno per gestire le lezioni di tennis e padel in modo efficiente
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-3">
-              <div className="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6"
-                  >
-                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                    <line x1="16" x2="16" y1="2" y2="6"></line>
-                    <line x1="8" x2="8" y1="2" y2="6"></line>
-                    <line x1="3" x2="21" y1="10" y2="10"></line>
-                  </svg>
+            <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 py-16 md:grid-cols-3 md:gap-12">
+              <div className="group flex flex-col items-center space-y-6 rounded-2xl border p-10 shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                  <Calendar className="h-10 w-10" />
                 </div>
-                <h3 className="text-xl font-bold">Smart Scheduling</h3>
-                <p className="text-center text-muted-foreground">
-                  AI-powered scheduling that optimizes your availability and student preferences
+                <h3 className="text-2xl font-bold">Pianificazione Intelligente</h3>
+                <p className="text-center text-lg text-muted-foreground leading-relaxed">
+                  Pianificazione basata su AI che ottimizza la tua disponibilità e le preferenze degli studenti
                 </p>
               </div>
-              <div className="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6"
-                  >
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                  </svg>
+              <div className="group flex flex-col items-center space-y-6 rounded-2xl border p-10 shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                  <Users className="h-10 w-10" />
                 </div>
-                <h3 className="text-xl font-bold">Student Management</h3>
-                <p className="text-center text-muted-foreground">
-                  Track student progress, preferences, and attendance in one place
+                <h3 className="text-2xl font-bold">Gestione Studenti</h3>
+                <p className="text-center text-lg text-muted-foreground leading-relaxed">
+                  Monitora i progressi degli studenti, le preferenze e la presenza in un unico posto
                 </p>
               </div>
-              <div className="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6"
-                  >
-                    <path d="M12 2v8"></path>
-                    <path d="m16 6-4 4-4-4"></path>
-                    <path d="M8 16a4 4 0 1 0 8 0"></path>
-                    <path d="M16 16a4 4 0 0 0-8 0"></path>
-                  </svg>
+              <div className="group flex flex-col items-center space-y-6 rounded-2xl border p-10 shadow-lg transition-all hover:shadow-xl hover:-translate-y-1">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary group-hover:scale-110 transition-transform">
+                  <MessageSquare className="h-10 w-10" />
                 </div>
-                <h3 className="text-xl font-bold">Voice & Chat Input</h3>
-                <p className="text-center text-muted-foreground">
-                  Enter your availability through natural language or voice commands
+                <h3 className="text-2xl font-bold">Input Vocale & Chat</h3>
+                <p className="text-center text-lg text-muted-foreground leading-relaxed">
+                  Inserisci la tua disponibilità tramite linguaggio naturale o comandi vocali
                 </p>
               </div>
             </div>
           </div>
         </section>
       </main>
-      <footer className="w-full border-t py-6">
-        <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-center text-sm text-muted-foreground md:text-left">
-            © 2025 CourtTime. All rights reserved.
+      <footer className="w-full border-t py-10 bg-muted/50">
+        <div className="container mx-auto max-w-7xl flex flex-col items-center justify-between gap-6 px-8 md:flex-row">
+          <div className="flex items-center gap-3">
+            <TennisBall className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold gradient-heading">CourtTime</span>
+          </div>
+          <p className="text-center text-base text-muted-foreground md:text-left">
+            © 2025 CourtTime. Tutti i diritti riservati.
           </p>
-          <div className="flex gap-4">
-            <Link href="/terms" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
-              Terms
+          <div className="flex gap-8">
+            <Link href="/terms" className="text-base text-muted-foreground underline-offset-4 hover:underline">
+              Termini
             </Link>
-            <Link href="/privacy" className="text-sm text-muted-foreground underline-offset-4 hover:underline">
+            <Link href="/privacy" className="text-base text-muted-foreground underline-offset-4 hover:underline">
               Privacy
             </Link>
           </div>

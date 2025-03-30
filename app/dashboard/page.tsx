@@ -1,97 +1,202 @@
-import { currentUser, auth, clerkClient } from "@clerk/nextjs"
+"use client"
+
+import { useEffect, useState } from "react"
+import { useUser, useOrganization } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarDateRangePicker } from "@/components/date-range-picker"
-import { Overview } from "@/components/overview"
-import { RecentBookings } from "@/components/recent-bookings"
-import { supabase } from "@/lib/supabase"
+import { BookingCalendar } from "@/components/booking-calendar"
+import { ProfileList } from "@/components/profile-list"
+import { CreateOrganizationModal } from "@/components/create-organization-modal"
+import { InviteMemberModal } from "@/components/invite-member-modal"
+import { Building, Users, Calendar } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ProfileDetails } from "@/components/profile-details"
 
-export default async function DashboardPage() {
-  const user = await currentUser()
-  const { orgId } = auth()
+export default function DashboardPage() {
+  const { user, isLoaded: isUserLoaded } = useUser()
+  const { organization, isLoaded: isOrgLoaded } = useOrganization()
+  const router = useRouter()
+  const [isCreateOrgModalOpen, setIsCreateOrgModalOpen] = useState(false)
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedProfile, setSelectedProfile] = useState<string | null>(null)
 
-  if (!orgId) {
-    return null // Gestito dal middleware
+  useEffect(() => {
+    if (isUserLoaded && !user) {
+      router.push("/login")
+    }
+  }, [isUserLoaded, user, router])
+
+  if (!isUserLoaded || !isOrgLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
   }
 
-  // Ottieni il nome dell'organizzazione
-  const organization = await clerkClient.organizations.getOrganization({
-    organizationId: orgId,
-  })
+  if (!user) {
+    return null
+  }
 
-  // Ottieni le statistiche per questa organizzazione
-  const { data: bookingsCount } = await supabase
-    .from("bookings")
-    .select("id", { count: "exact" })
-    .eq("organization_id", orgId)
-
-  const { data: studentsCount } = await supabase
-    .from("profiles")
-    .select("id", { count: "exact" })
-    .eq("organization_id", orgId)
-    .neq("user_id", user?.id || "")
-
-  // Altre statistiche...
+  if (!organization) {
+    return (
+      <div className="container max-w-4xl py-8">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold">Benvenuto in Coachem</h1>
+          <p className="text-muted-foreground">
+            Per iniziare, devi creare o selezionare un'organizzazione
+          </p>
+          <Button onClick={() => router.push("/select-org")}>
+            Seleziona o crea un'organizzazione
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div className="container py-8">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome to {organization.name}</p>
+          <h1 className="text-3xl font-bold">{organization.name}</h1>
+          <p className="text-muted-foreground">
+            Gestisci i tuoi profili e le prenotazioni
+          </p>
         </div>
-        <CalendarDateRangePicker />
+        <div className="flex gap-2">
+          <Button onClick={() => setIsInviteModalOpen(true)}>
+            <Users className="mr-2 h-4 w-4" />
+            Invita Membro
+          </Button>
+          <Button onClick={() => setIsCreateOrgModalOpen(true)}>
+            <Building className="mr-2 h-4 w-4" />
+            Nuova Organizzazione
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              className="h-4 w-4 text-muted-foreground"
-            >
-              <path d="M8 18.85v-10.5c0-1 .65-1.5 1.5-1.5.82 0 1.5.67 1.5 1.5v10.5" />
-              <path d="M12 18.85v-10.5c0-1 .65-1.5 1.5-1.5.82 0 1.5.67 1.5 1.5v10.5" />
-              <path d="M16 18.85v-10.5c0-1 .65-1.5 1.5-1.5.82 0 1.5.67 1.5 1.5v10.5" />
-              <path d="M5 8.85h14" />
-              <path d="M6 4.85h12" />
-            </svg>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Prossime Prenotazioni
+            </CardTitle>
+            <CardDescription>
+              Visualizza e gestisci le prenotazioni
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{bookingsCount?.count || 0}</div>
-            <p className="text-xs text-muted-foreground">+10% from last month</p>
+            <BookingCalendar />
           </CardContent>
         </Card>
 
-        {/* Altre card... */}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
+        <Card>
           <CardHeader>
-            <CardTitle>Overview</CardTitle>
-            <CardDescription>Booking trends over the past 30 days</CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <Overview organizationId={orgId} />
-          </CardContent>
-        </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Recent Bookings</CardTitle>
-            <CardDescription>Your most recent lesson bookings</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Lista Profili
+            </CardTitle>
+            <CardDescription>
+              Gestisci i tuoi profili
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <RecentBookings organizationId={orgId} />
+            <div className="space-y-4">
+              <Input
+                placeholder="Cerca profili..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Tabs defaultValue="all" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="all">Tutti</TabsTrigger>
+                  <TabsTrigger value="active">Attivi</TabsTrigger>
+                  <TabsTrigger value="inactive">Inattivi</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="all" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <ProfileList
+                        searchQuery={searchQuery}
+                        onSelectProfile={setSelectedProfile}
+                        selectedProfile={selectedProfile}
+                      />
+                    </div>
+                    <div>
+                      {selectedProfile ? (
+                        <ProfileDetails profileId={selectedProfile} />
+                      ) : (
+                        <div className="text-center text-muted-foreground">
+                          Seleziona un profilo per visualizzare i dettagli
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="active" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <ProfileList
+                        searchQuery={searchQuery}
+                        onSelectProfile={setSelectedProfile}
+                        selectedProfile={selectedProfile}
+                        status="active"
+                      />
+                    </div>
+                    <div>
+                      {selectedProfile ? (
+                        <ProfileDetails profileId={selectedProfile} />
+                      ) : (
+                        <div className="text-center text-muted-foreground">
+                          Seleziona un profilo per visualizzare i dettagli
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="inactive" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <ProfileList
+                        searchQuery={searchQuery}
+                        onSelectProfile={setSelectedProfile}
+                        selectedProfile={selectedProfile}
+                        status="inactive"
+                      />
+                    </div>
+                    <div>
+                      {selectedProfile ? (
+                        <ProfileDetails profileId={selectedProfile} />
+                      ) : (
+                        <div className="text-center text-muted-foreground">
+                          Seleziona un profilo per visualizzare i dettagli
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      <CreateOrganizationModal
+        isOpen={isCreateOrgModalOpen}
+        onClose={() => setIsCreateOrgModalOpen(false)}
+      />
+
+      <InviteMemberModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+      />
     </div>
   )
 }

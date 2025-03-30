@@ -6,9 +6,10 @@ import { supabase } from "@/lib/supabase"
 
 export async function POST(req: Request) {
   // Get the headers
-  const svix_id = req.headers.get("svix-id") || ""
-  const svix_timestamp = req.headers.get("svix-timestamp") || ""
-  const svix_signature = req.headers.get("svix-signature") || ""
+  const headersList = await headers()
+  const svix_id = headersList.get("svix-id") || ""
+  const svix_timestamp = headersList.get("svix-timestamp") || ""
+  const svix_signature = headersList.get("svix-signature") || ""
 
   // If there are no headers, error out
   if (!svix_id || !svix_timestamp || !svix_signature) {
