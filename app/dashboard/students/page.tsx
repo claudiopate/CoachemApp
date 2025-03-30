@@ -15,7 +15,7 @@ export default function StudentsPage() {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Profili</h1>
-        <Button>Nuovo Profilo</Button>
+        <Button>Nuovo Ciao</Button>
       </div>
 
       <div className="mb-6">

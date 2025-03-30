@@ -1,77 +1,75 @@
-import { NextResponse, NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getAuth } from "@clerk/nextjs/server"
+import { NextResponse } from "next/server"
+import { db } from "@/lib/db"
+import { getAuth } from "@/lib/auth"
 
-// GET /api/bookings - Ottieni tutte le prenotazioni dell'organizzazione
-export async function GET(request: NextRequest) {
+// GET /api/bookings - Lista prenotazioni
+export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const search = searchParams.get("search") || ""
-    const { userId, orgId } = getAuth(request)
+    const { orgId } = await getAuth()
+    const { searchParams } = new URL(req.url)
+    
+    const userId = searchParams.get("userId")
+    const coachId = searchParams.get("coachId")
+    const status = searchParams.get("status")
+    const type = searchParams.get("type")
+    const from = searchParams.get("from")
+    const to = searchParams.get("to")
 
-    if (!userId || !orgId) {
-      return new NextResponse("Unauthorized", { status: 401 })
+    const where = {
+      organizationId: orgId,
+      ...(userId && { userId }),
+      ...(coachId && { coachId }),
+      ...(status && { status }),
+      ...(type && { type }),
+      ...(from && to && {
+        date: {
+          gte: new Date(from),
+          lte: new Date(to)
+        }
+      })
     }
 
-    const bookings = await prisma.booking.findMany({
-      where: {
-        organizationId: orgId,
-        OR: [
-          {
-            userId: {
-              contains: search,
-              mode: "insensitive",
-            },
-          },
-          {
-            coachId: {
-              contains: search,
-              mode: "insensitive",
-            },
-          },
-        ],
+    const bookings = await db.booking.findMany({
+      where,
+      include: {
+        user: true,
+        coach: true,
+        attendance: true
       },
       orderBy: {
-        date: "desc",
-      },
+        date: "desc"
+      }
     })
 
     return NextResponse.json(bookings)
   } catch (error) {
     console.error("[BOOKINGS_GET]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    return new NextResponse("Internal Error", { status: 500 })
   }
 }
 
-// POST /api/bookings - Crea una nuova prenotazione
-export async function POST(request: NextRequest) {
+// POST /api/bookings - Crea prenotazione
+export async function POST(req: Request) {
   try {
-    const { userId, orgId } = getAuth(request)
+    const { orgId } = await getAuth()
+    const { userId, coachId, date, startTime, endTime, type } = await req.json()
 
-    if (!userId || !orgId) {
-      return new NextResponse("Unauthorized", { status: 401 })
-    }
-
-    const body = await request.json()
-    const { userId: bookingUserId, coachId, date, startTime, endTime, type = "lesson", status = "upcoming" } = body
-
-    const booking = await prisma.booking.create({
+    const booking = await db.booking.create({
       data: {
-        userId: bookingUserId,
+        userId,
         coachId,
         organizationId: orgId,
-        date,
+        date: new Date(date),
         startTime,
         endTime,
-        type,
-        status,
-      },
+        type
+      }
     })
 
     return NextResponse.json(booking)
   } catch (error) {
-    console.error("[BOOKING_POST]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    console.error("[BOOKINGS_POST]", error)
+    return new NextResponse("Internal Error", { status: 500 })
   }
 }
 

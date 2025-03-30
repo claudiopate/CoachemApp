@@ -1,82 +1,75 @@
-import { NextResponse, NextRequest } from "next/server"
-import { prisma } from "@/lib/prisma"
-import { getAuth } from "@clerk/nextjs/server"
+import { NextResponse } from "next/server"
+import { db } from "@/lib/db"
+import { getAuth } from "@/lib/auth"
 
-// GET /api/profiles - Ottieni tutti i profili dell'organizzazione
-export async function GET(request: NextRequest) {
+// GET /api/profiles - Lista profili
+export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const search = searchParams.get("search") || ""
-    const { orgId } = getAuth(request)
+    const { orgId } = await getAuth()
+    const { searchParams } = new URL(req.url)
+    
+    const userId = searchParams.get("userId")
+    const coachId = searchParams.get("coachId")
+    const status = searchParams.get("status")
+    const type = searchParams.get("type")
+    const from = searchParams.get("from")
+    const to = searchParams.get("to")
 
-    if (!orgId) {
-      return new NextResponse("Unauthorized", { status: 401 })
+    const where = {
+      organizationId: orgId,
+      ...(userId && { userId }),
+      ...(coachId && { coachId }),
+      ...(status && { status }),
+      ...(type && { type }),
+      ...(from && to && {
+        date: {
+          gte: new Date(from),
+          lte: new Date(to)
+        }
+      })
     }
 
-    const profiles = await prisma.profile.findMany({
-      where: {
-        organizationId: orgId,
-        OR: [
-          {
-            phone: {
-              contains: search,
-              mode: "insensitive",
-            },
-          },
-          {
-            level: {
-              contains: search,
-              mode: "insensitive",
-            },
-          },
-          {
-            preferredSport: {
-              contains: search,
-              mode: "insensitive",
-            },
-          },
-        ],
+    const profiles = await db.profile.findMany({
+      where,
+      include: {
+        bookings: true,
+        coaching: true,
+        progressRecords: true
       },
       orderBy: {
-        createdAt: "desc",
-      },
+        createdAt: "desc"
+      }
     })
 
     return NextResponse.json(profiles)
   } catch (error) {
     console.error("[PROFILES_GET]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    return new NextResponse("Internal Error", { status: 500 })
   }
 }
 
-// POST /api/profiles - Crea un nuovo profilo
-export async function POST(request: NextRequest) {
+// POST /api/profiles - Crea profilo
+export async function POST(req: Request) {
   try {
-    const { orgId } = getAuth(request)
-    
-    if (!orgId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { orgId, userId } = await getAuth()
+    const { phone, level, preferredSport, preferredDays, preferredTimes, notes } = await req.json()
 
-    const body = await request.json()
-    const { userId, phone, level, preferredSport, preferredDays, preferredTimes, notes } = body
-
-    const profile = await prisma.profile.create({
+    const profile = await db.profile.create({
       data: {
         userId,
+        organizationId: orgId,
         phone,
         level,
         preferredSport,
         preferredDays,
         preferredTimes,
-        notes,
-        organizationId: orgId,
+        notes
       }
     })
 
-    return NextResponse.json(profile, { status: 201 })
+    return NextResponse.json(profile)
   } catch (error) {
-    console.error("[PROFILE_POST]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    console.error("[PROFILES_POST]", error)
+    return new NextResponse("Internal Error", { status: 500 })
   }
 } 

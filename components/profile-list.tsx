@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 interface Profile {
   id: string
@@ -35,22 +36,27 @@ export function ProfileList({
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
-        const response = await fetch(`/api/profiles?search=${searchQuery}`)
-        if (!response.ok) throw new Error("Failed to fetch profiles")
+        const params = new URLSearchParams()
+        if (searchQuery) params.append("search", searchQuery)
+        if (status) params.append("status", status)
+
+        const response = await fetch(`/api/profiles?${params.toString()}`)
+        if (!response.ok) throw new Error("Errore nel caricamento dei profili")
         const data = await response.json()
         setProfiles(data)
       } catch (error) {
         console.error("Error fetching profiles:", error)
+        toast.error("Errore nel caricamento dei profili")
       } finally {
         setLoading(false)
       }
     }
 
     fetchProfiles()
-  }, [searchQuery])
+  }, [searchQuery, status])
 
   if (loading) {
-    return <div>Loading...</div>
+    return <div className="flex items-center justify-center p-12">Caricamento...</div>
   }
 
   return (
@@ -61,24 +67,30 @@ export function ProfileList({
       <CardContent>
         <ScrollArea className="h-[600px]">
           <div className="space-y-2">
-            {profiles.map((profile) => (
-              <div
-                key={profile.id}
-                className={cn(
-                  "p-4 rounded-lg border cursor-pointer hover:bg-accent",
-                  selectedProfile === profile.id && "bg-accent"
-                )}
-                onClick={() => onSelectProfile(profile.id)}
-              >
-                <div className="font-medium">{profile.phone || "Nessun telefono"}</div>
-                <div className="text-sm text-muted-foreground">
-                  {profile.level ? `Livello: ${profile.level}` : "Nessun livello"}
+            {profiles.length > 0 ? (
+              profiles.map((profile) => (
+                <div
+                  key={profile.id}
+                  className={cn(
+                    "p-4 rounded-lg border cursor-pointer hover:bg-accent",
+                    selectedProfile === profile.id && "bg-accent"
+                  )}
+                  onClick={() => onSelectProfile(profile.id)}
+                >
+                  <div className="font-medium">{profile.phone || "Nessun telefono"}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {profile.level ? `Livello: ${profile.level}` : "Nessun livello"}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {profile.preferredSport ? `Sport: ${profile.preferredSport}` : "Nessuno sport preferito"}
+                  </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  {profile.preferredSport ? `Sport: ${profile.preferredSport}` : "Nessuno sport preferito"}
-                </div>
+              ))
+            ) : (
+              <div className="text-center text-muted-foreground p-4">
+                Nessun profilo trovato
               </div>
-            ))}
+            )}
           </div>
         </ScrollArea>
       </CardContent>
