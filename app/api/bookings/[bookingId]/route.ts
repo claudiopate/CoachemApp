@@ -55,6 +55,36 @@ export async function PATCH(
   }
 }
 
+// PUT /api/bookings/[bookingId] - Aggiorna prenotazione
+export async function PUT(
+  req: Request,
+  { params }: { params: { bookingId: string } }
+) {
+  try {
+    const { orgId } = await getAuth()
+    const body = await req.json()
+
+    const booking = await db.booking.update({
+      where: {
+        id: params.bookingId,
+        organizationId: orgId,
+      },
+      data: {
+        date: new Date(body.date),
+        startTime: body.startTime,
+        endTime: body.endTime,
+        type: body.type,
+        status: body.status,
+      },
+    })
+
+    return NextResponse.json(booking)
+  } catch (error) {
+    console.error("[BOOKING_PUT]", error)
+    return new NextResponse("Internal error", { status: 500 })
+  }
+}
+
 // DELETE /api/bookings/[bookingId] - Elimina prenotazione
 export async function DELETE(
   req: Request,
@@ -63,24 +93,16 @@ export async function DELETE(
   try {
     const { orgId } = await getAuth()
 
-    // Prima eliminiamo l'attendance associata
-    await db.attendance.deleteMany({
-      where: {
-        bookingId: params.bookingId,
-        organizationId: orgId
-      }
-    })
-
-    const booking = await db.booking.delete({
+    await db.booking.delete({
       where: {
         id: params.bookingId,
-        organizationId: orgId
-      }
+        organizationId: orgId,
+      },
     })
 
-    return NextResponse.json(booking)
+    return new NextResponse(null, { status: 204 })
   } catch (error) {
     console.error("[BOOKING_DELETE]", error)
-    return new NextResponse("Internal Error", { status: 500 })
+    return new NextResponse("Internal error", { status: 500 })
   }
-} 
+}

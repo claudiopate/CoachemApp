@@ -31,9 +31,9 @@ export async function isAdmin() {
   return role === "admin"
 }
 
-export async function isStudent() {
+export async function isProfileUser() {
   const role = await getUserRole()
-  return role === "student"
+  return role === "profile"
 }
 
 export async function getCurrentProfile() {
@@ -72,4 +72,3 @@ export async function getAuth() {
 
   return { userId, orgId }
 }
-

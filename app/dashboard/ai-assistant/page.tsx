@@ -142,7 +142,7 @@ export default function AIAssistantPage() {
                 </p>
                 <textarea
                   className="w-full min-h-[200px] p-4 rounded-md border"
-                  placeholder="Example: I'm available on Mondays and Wednesdays from 4-8pm, and Saturday mornings. I prefer to teach advanced students in the evenings and beginners in the morning. I need a 30-minute break between lessons."
+                  placeholder="Example: I'm available on Mondays and Wednesdays from 4-8pm, and Saturday mornings. I prefer to teach advanced profiles in the evenings and beginners in the morning. I need a 30-minute break between lessons."
                 ></textarea>
               </div>
             </CardContent>
@@ -156,4 +156,3 @@ export default function AIAssistantPage() {
     </div>
   )
 }
-

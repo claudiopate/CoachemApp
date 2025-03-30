@@ -1,44 +1,22 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
+import { auth } from "@clerk/nextjs"
 import { db } from "@/lib/db"
-import { getAuth } from "@/lib/auth"
+import { type Prisma } from "@prisma/client"
 
 // GET /api/profiles - Lista profili
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
-    const { orgId } = await getAuth()
-    const { searchParams } = new URL(req.url)
-    
-    const userId = searchParams.get("userId")
-    const coachId = searchParams.get("coachId")
-    const status = searchParams.get("status")
-    const type = searchParams.get("type")
-    const from = searchParams.get("from")
-    const to = searchParams.get("to")
+    const { userId, orgId } = auth()
 
-    const where = {
-      organizationId: orgId,
-      ...(userId && { userId }),
-      ...(coachId && { coachId }),
-      ...(status && { status }),
-      ...(type && { type }),
-      ...(from && to && {
-        date: {
-          gte: new Date(from),
-          lte: new Date(to)
-        }
-      })
+    if (!userId || !orgId) {
+      return new NextResponse("Unauthorized", { status: 401 })
     }
 
     const profiles = await db.profile.findMany({
-      where,
+      where: { organizationId: orgId },
       include: {
-        bookings: true,
-        coaching: true,
-        progressRecords: true
-      },
-      orderBy: {
-        createdAt: "desc"
-      }
+        availability: true
+      } as Prisma.ProfileInclude
     })
 
     return NextResponse.json(profiles)
@@ -48,23 +26,54 @@ export async function GET(req: Request) {
   }
 }
 
+type ProfileInput = {
+  name: string
+  email: string
+  phone?: string
+  level?: string
+  preferredSport?: string
+  notes?: string
+  availability?: Array<{
+    dayOfWeek: string
+    startTime: string
+    endTime: string
+  }>
+}
+
 // POST /api/profiles - Crea profilo
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { orgId, userId } = await getAuth()
-    const { phone, level, preferredSport, preferredDays, preferredTimes, notes } = await req.json()
+    const { userId, orgId } = auth()
+
+    if (!userId || !orgId) {
+      return new NextResponse("Unauthorized", { status: 401 })
+    }
+
+    const body = await req.json() as ProfileInput
+
+    const createInput: Prisma.ProfileCreateInput = {
+      userId,
+      organizationId: orgId,
+      name: body.name,
+      email: body.email,
+      phone: body.phone,
+      level: body.level,
+      preferredSport: body.preferredSport,
+      notes: body.notes,
+      availability: body.availability ? {
+        create: body.availability.map(slot => ({
+          dayOfWeek: slot.dayOfWeek,
+          startTime: slot.startTime,
+          endTime: slot.endTime
+        }))
+      } : undefined
+    }
 
     const profile = await db.profile.create({
-      data: {
-        userId,
-        organizationId: orgId,
-        phone,
-        level,
-        preferredSport,
-        preferredDays,
-        preferredTimes,
-        notes
-      }
+      data: createInput,
+      include: {
+        availability: true
+      } as Prisma.ProfileInclude
     })
 
     return NextResponse.json(profile)
@@ -72,4 +81,4 @@ export async function POST(req: Request) {
     console.error("[PROFILES_POST]", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
-} 
+}

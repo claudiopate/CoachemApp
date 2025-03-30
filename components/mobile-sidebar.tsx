@@ -37,8 +37,8 @@ export function MobileSidebar() {
       icon: Calendar,
     },
     {
-      title: "Students",
-      href: "/dashboard/students",
+      title: "Profiles",
+      href: "/dashboard/profiles",
       icon: Users,
     },
     {
@@ -107,4 +107,3 @@ export function MobileSidebar() {
     </Sheet>
   )
 }
-

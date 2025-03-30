@@ -59,6 +59,38 @@ export async function PATCH(
   }
 }
 
+// PUT /api/profiles/[profileId] - Aggiorna profilo
+export async function PUT(
+  req: Request,
+  { params }: { params: { profileId: string } }
+) {
+  try {
+    const { orgId } = await getAuth()
+    const body = await req.json()
+
+    const profile = await db.profile.update({
+      where: {
+        id: params.profileId,
+        organizationId: orgId
+      },
+      data: {
+        name: body.name,
+        email: body.email,
+        phone: body.phone,
+        level: body.level,
+        preferredSport: body.preferredSport,
+        preferredTimes: body.preferredTimes,
+        notes: body.notes,
+      }
+    })
+
+    return NextResponse.json(profile)
+  } catch (error) {
+    console.error("[PROFILE_PUT]", error)
+    return new NextResponse("Internal error", { status: 500 })
+  }
+}
+
 // DELETE /api/profiles/[profileId] - Elimina profilo
 export async function DELETE(
   req: Request,
@@ -67,6 +99,15 @@ export async function DELETE(
   try {
     const { orgId } = await getAuth()
 
+    // Prima eliminiamo tutte le prenotazioni associate
+    await db.booking.deleteMany({
+      where: {
+        userId: params.profileId,
+        organizationId: orgId
+      }
+    })
+
+    // Poi eliminiamo il profilo
     await db.profile.delete({
       where: {
         id: params.profileId,
@@ -77,6 +118,6 @@ export async function DELETE(
     return new NextResponse(null, { status: 204 })
   } catch (error) {
     console.error("[PROFILE_DELETE]", error)
-    return new NextResponse("Internal Error", { status: 500 })
+    return new NextResponse("Internal error", { status: 500 })
   }
-} 
+}

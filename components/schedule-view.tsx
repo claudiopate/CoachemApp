@@ -1,131 +1,201 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Edit, Trash2 } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { BookingForm } from "./booking-form"
+
+interface Booking {
+  id: string
+  date: Date
+  startTime: string
+  endTime: string
+  type: string
+  status: string
+  userId: string
+  user?: {
+    name: string
+    email: string
+  }
+}
 
 type ScheduleViewProps = {
   date?: Date
 }
 
-// Mock data for schedule
-const timeSlots = [
-  {
-    id: "1",
-    time: "9:00 AM - 10:00 AM",
-    student: "Emma Johnson",
-    type: "Tennis",
-    level: "Intermediate",
-    court: "Court 1",
-    status: "confirmed",
-  },
-  {
-    id: "2",
-    time: "10:30 AM - 11:30 AM",
-    student: "Michael Chen",
-    type: "Padel",
-    level: "Beginner",
-    court: "Court 2",
-    status: "confirmed",
-  },
-  {
-    id: "3",
-    time: "1:00 PM - 2:30 PM",
-    student: "Sophia Rodriguez",
-    type: "Tennis",
-    level: "Advanced",
-    court: "Court 1",
-    status: "confirmed",
-  },
-  {
-    id: "4",
-    time: "3:00 PM - 4:00 PM",
-    student: null,
-    type: null,
-    level: null,
-    court: "Court 3",
-    status: "available",
-  },
-  {
-    id: "5",
-    time: "4:30 PM - 5:30 PM",
-    student: "James Wilson",
-    type: "Padel",
-    level: "Intermediate",
-    court: "Court 2",
-    status: "pending",
-  },
-]
-
 export function ScheduleView({ date }: ScheduleViewProps) {
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [editingBooking, setEditingBooking] = useState<Booking | null>(null)
+  const { toast } = useToast()
+
+  const fetchBookings = async () => {
+    try {
+      const response = await fetch("/api/bookings")
+      if (!response.ok) {
+        throw new Error("Failed to fetch bookings")
+      }
+      const data = await response.json()
+      setBookings(data)
+    } catch (error) {
+      console.error("Error fetching bookings:", error)
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare le prenotazioni",
+        variant: "destructive",
+      })
+    }
+  }
+
+  useEffect(() => {
+    fetchBookings()
+  }, [])
+
+  const handleEdit = (booking: Booking) => {
+    setEditingBooking(booking)
+  }
+
+  const handleDelete = async (bookingId: string) => {
+    if (!confirm("Sei sicuro di voler eliminare questa prenotazione?")) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to delete booking")
+      }
+
+      toast({
+        title: "Prenotazione eliminata",
+        description: "La prenotazione è stata eliminata con successo",
+      })
+
+      fetchBookings()
+    } catch (error) {
+      console.error("Error deleting booking:", error)
+      toast({
+        title: "Errore",
+        description: "Impossibile eliminare la prenotazione",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleEditSubmit = async (formData: any) => {
+    if (!editingBooking) return
+
+    try {
+      const response = await fetch(`/api/bookings/${editingBooking.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to update booking")
+      }
+
+      toast({
+        title: "Prenotazione aggiornata",
+        description: "La prenotazione è stata aggiornata con successo",
+      })
+
+      setEditingBooking(null)
+      fetchBookings()
+    } catch (error) {
+      console.error("Error updating booking:", error)
+      toast({
+        title: "Errore",
+        description: "Impossibile aggiornare la prenotazione",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (!date) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Select a date to view your schedule</p>
+        <p className="text-muted-foreground">Seleziona una data per vedere le prenotazioni</p>
       </div>
     )
   }
 
+  const selectedDateBookings = bookings.filter(
+    (booking) => new Date(booking.date).toDateString() === date.toDateString()
+  )
+
   return (
     <div className="space-y-4">
-      {timeSlots.map((slot) => (
-        <div
-          key={slot.id}
-          className={`p-4 rounded-lg border ${
-            slot.status === "available" ? "border-dashed border-muted-foreground/50" : "border-border"
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="font-medium">{slot.time}</div>
-            <div className="flex items-center gap-2">
-              {slot.status === "available" ? (
-                <Button size="sm" variant="outline">
-                  Book Slot
-                </Button>
-              ) : (
-                <>
-                  <Button size="icon" variant="ghost">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {slot.student ? (
-            <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-              <div className="text-muted-foreground">Student:</div>
-              <div>{slot.student}</div>
-
-              <div className="text-muted-foreground">Type:</div>
-              <div>{slot.type}</div>
-
-              <div className="text-muted-foreground">Level:</div>
-              <div>{slot.level}</div>
-
-              <div className="text-muted-foreground">Court:</div>
-              <div>{slot.court}</div>
-
-              <div className="text-muted-foreground">Status:</div>
+      {selectedDateBookings.length === 0 ? (
+        <div className="flex items-center justify-center h-32">
+          <p className="text-muted-foreground">Nessuna prenotazione per questa data</p>
+        </div>
+      ) : (
+        selectedDateBookings.map((booking) => (
+          <div
+            key={booking.id}
+            className="p-4 rounded-lg border"
+          >
+            <div className="flex items-center justify-between">
               <div>
-                <Badge
-                  variant={
-                    slot.status === "confirmed" ? "default" : slot.status === "pending" ? "secondary" : "outline"
-                  }
-                >
-                  {slot.status}
-                </Badge>
+                <div className="font-medium">
+                  {booking.startTime} - {booking.endTime}
+                </div>
+                <div className="mt-2 text-sm">
+                  <div className="text-muted-foreground">Cliente:</div>
+                  <div>{booking.user?.name || "Cliente non specificato"}</div>
+                  <div className="text-muted-foreground mt-1">Tipo:</div>
+                  <div>{booking.type}</div>
+                  <div className="text-muted-foreground mt-1">Stato:</div>
+                  <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
+                    {booking.status}
+                  </Badge>
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button size="icon" variant="ghost" onClick={() => handleEdit(booking)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => handleDelete(booking.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          ) : (
-            <div className="mt-2 text-sm text-muted-foreground">Available slot - {slot.court}</div>
+          </div>
+        ))
+      )}
+
+      <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifica prenotazione</DialogTitle>
+            <DialogDescription>
+              Modifica i dettagli della prenotazione
+            </DialogDescription>
+          </DialogHeader>
+          {editingBooking && (
+            <BookingForm
+              initialData={editingBooking}
+              onSubmit={handleEditSubmit}
+              onCancel={() => setEditingBooking(null)}
+            />
           )}
-        </div>
-      ))}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
-

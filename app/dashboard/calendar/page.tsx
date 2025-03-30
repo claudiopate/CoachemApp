@@ -6,9 +6,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BookingForm } from "@/components/booking-form"
 import { ScheduleView } from "@/components/schedule-view"
+import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
 
 export default function CalendarPage() {
   const [date, setDate] = useState<Date | undefined>(new Date())
+  const { toast } = useToast()
+  const router = useRouter()
+
+  const handleCreateBooking = async (formData: any) => {
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create booking")
+      }
+
+      toast({
+        title: "Prenotazione creata",
+        description: "La prenotazione è stata creata con successo",
+      })
+
+      router.refresh()
+    } catch (error) {
+      console.error("Error creating booking:", error)
+      toast({
+        title: "Errore",
+        description: "Impossibile creare la prenotazione",
+        variant: "destructive",
+      })
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -60,7 +94,7 @@ export default function CalendarPage() {
               <CardDescription>Schedule a new lesson or session</CardDescription>
             </CardHeader>
             <CardContent>
-              <BookingForm />
+              <BookingForm onSubmit={handleCreateBooking} />
             </CardContent>
           </Card>
         </TabsContent>
@@ -68,4 +102,3 @@ export default function CalendarPage() {
     </div>
   )
 }
-

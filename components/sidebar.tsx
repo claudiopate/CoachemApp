@@ -37,8 +37,8 @@ export function Sidebar({ className }: SidebarProps) {
       icon: Calendar,
     },
     {
-      title: "Students",
-      href: "/dashboard/students",
+      title: "Profiles",
+      href: "/dashboard/profiles",
       icon: Users,
     },
     {
@@ -91,4 +91,3 @@ export function Sidebar({ className }: SidebarProps) {
     </div>
   )
 }
-

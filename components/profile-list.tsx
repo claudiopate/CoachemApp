@@ -1,99 +1,153 @@
-import { useEffect, useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { cn } from "@/lib/utils"
-import { toast } from "sonner"
+"use client"
 
-interface Profile {
-  id: string
-  userId: string
-  phone: string | null
-  level: string | null
-  preferredSport: string | null
-  preferredDays: string[]
-  preferredTimes: string | null
-  notes: string | null
-  createdAt: Date
-  updatedAt: Date
-}
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ProfileDialog } from "@/components/profile-dialog"
+import { useToast } from "@/components/ui/use-toast"
+import { PlusCircle } from "lucide-react"
+import type { Profile } from "@/types"
 
 interface ProfileListProps {
-  searchQuery: string
-  onSelectProfile: (profileId: string) => void
-  selectedProfile: string | null
-  status?: "active" | "inactive"
+  profiles: Profile[]
+  onProfileCreated?: (profile: Profile) => void
+  onSelectProfile?: (profileId: string) => void
+  selectedProfile?: string | null
 }
 
-export function ProfileList({
-  searchQuery,
+const days = [
+  { value: "monday", label: "Lunedì" },
+  { value: "tuesday", label: "Martedì" },
+  { value: "wednesday", label: "Mercoledì" },
+  { value: "thursday", label: "Giovedì" },
+  { value: "friday", label: "Venerdì" },
+  { value: "saturday", label: "Sabato" },
+  { value: "sunday", label: "Domenica" },
+]
+
+export function ProfileList({ 
+  profiles = [], 
+  onProfileCreated,
   onSelectProfile,
-  selectedProfile,
-  status,
+  selectedProfile
 }: ProfileListProps) {
-  const [profiles, setProfiles] = useState<Profile[]>([])
-  const [loading, setLoading] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const { toast } = useToast()
 
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      try {
-        const params = new URLSearchParams()
-        if (searchQuery) params.append("search", searchQuery)
-        if (status) params.append("status", status)
+  const handleCreateProfile = async (profileData: any) => {
+    try {
+      const response = await fetch("/api/profiles", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(profileData),
+      })
 
-        const response = await fetch(`/api/profiles?${params.toString()}`)
-        if (!response.ok) throw new Error("Errore nel caricamento dei profili")
-        const data = await response.json()
-        setProfiles(data)
-      } catch (error) {
-        console.error("Error fetching profiles:", error)
-        toast.error("Errore nel caricamento dei profili")
-      } finally {
-        setLoading(false)
-      }
+      if (!response.ok) throw new Error("Failed to create profile")
+
+      const newProfile = await response.json()
+      onProfileCreated?.(newProfile)
+      setDialogOpen(false)
+      
+      toast({
+        title: "Profilo creato",
+        description: "Il nuovo profilo è stato creato con successo",
+      })
+    } catch (error) {
+      console.error("Error creating profile:", error)
+      toast({
+        title: "Errore",
+        description: "Impossibile creare il profilo",
+        variant: "destructive",
+      })
     }
-
-    fetchProfiles()
-  }, [searchQuery, status])
-
-  if (loading) {
-    return <div className="flex items-center justify-center p-12">Caricamento...</div>
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Lista Profili</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[600px]">
-          <div className="space-y-2">
-            {profiles.length > 0 ? (
-              profiles.map((profile) => (
-                <div
-                  key={profile.id}
-                  className={cn(
-                    "p-4 rounded-lg border cursor-pointer hover:bg-accent",
-                    selectedProfile === profile.id && "bg-accent"
-                  )}
-                  onClick={() => onSelectProfile(profile.id)}
-                >
-                  <div className="font-medium">{profile.phone || "Nessun telefono"}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {profile.level ? `Livello: ${profile.level}` : "Nessun livello"}
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold">Profili</h2>
+        <Button onClick={() => setDialogOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Nuovo profilo
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {profiles.map((profile) => (
+          <Card 
+            key={profile.id} 
+            className={selectedProfile === profile.id ? "ring-2 ring-primary" : undefined}
+            onClick={() => onSelectProfile?.(profile.id)}
+          >
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                {profile.image ? (
+                  <img
+                    src={profile.image}
+                    alt={profile.name}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                    <span className="text-lg font-medium">
+                      {profile.name.charAt(0)}
+                    </span>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {profile.preferredSport ? `Sport: ${profile.preferredSport}` : "Nessuno sport preferito"}
-                  </div>
+                )}
+                <div>
+                  <CardTitle>{profile.name}</CardTitle>
+                  <CardDescription>{profile.email}</CardDescription>
                 </div>
-              ))
-            ) : (
-              <div className="text-center text-muted-foreground p-4">
-                Nessun profilo trovato
               </div>
-            )}
-          </div>
-        </ScrollArea>
-      </CardContent>
-    </Card>
+            </CardHeader>
+            <CardContent>
+              <dl className="space-y-2 text-sm">
+                {profile.level && (
+                  <div>
+                    <dt className="font-medium">Livello:</dt>
+                    <dd className="capitalize">{profile.level}</dd>
+                  </div>
+                )}
+                {profile.preferredSport && (
+                  <div>
+                    <dt className="font-medium">Sport preferito:</dt>
+                    <dd className="capitalize">{profile.preferredSport}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="font-medium mb-1">Disponibilità:</dt>
+                  <dd>
+                    {days.map(day => {
+                      const slots = profile.availability.filter(a => a.dayOfWeek === day.value)
+                      if (slots.length === 0) return null
+                      
+                      return (
+                        <div key={day.value} className="text-sm">
+                          <span className="font-medium">{day.label}:</span>{" "}
+                          {slots.map((slot, i) => (
+                            <span key={slot.id}>
+                              {slot.startTime}-{slot.endTime}
+                              {i < slots.length - 1 ? ", " : ""}
+                            </span>
+                          ))}
+                        </div>
+                      )
+                    })}
+                  </dd>
+                </div>
+              </dl>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <ProfileDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={handleCreateProfile}
+      />
+    </div>
   )
-} 
+}
