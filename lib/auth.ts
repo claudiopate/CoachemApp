@@ -33,7 +33,7 @@ export async function isAdmin() {
 
 export async function isProfileUser() {
   const role = await getUserRole()
-  return role === "profile"
+  return role === "basic_member"
 }
 
 export async function getCurrentProfile() {
@@ -43,32 +43,43 @@ export async function getCurrentProfile() {
     return null
   }
 
-  const profile = await db.profile.findUnique({
-    where: {
-      userId,
-      organizationId: orgId
-    }
-  })
+  try {
+    const profile = await db.profile.findFirst({
+      where: {
+        userId,
+        organizationId: orgId,
+      }
+    })
 
-  return profile
+    return profile
+  } catch (error) {
+    console.error("Error getting profile:", error)
+    return null
+  }
 }
 
 export async function requireProfile() {
   const profile = await getCurrentProfile()
-  
+
   if (!profile) {
-    throw new Error("Unauthorized")
+    throw new Error("Profile not found")
   }
 
   return profile
 }
 
 export async function getAuth() {
-  const { userId, orgId } = await auth()
-  
-  if (!userId || !orgId) {
+  try {
+    const session = await auth()
+    const { userId, orgId } = session
+
+    if (!userId || !orgId) {
+      throw new Error("Unauthorized")
+    }
+
+    return { userId, orgId }
+  } catch (error) {
+    console.error("[AUTH_ERROR]", error)
     throw new Error("Unauthorized")
   }
-
-  return { userId, orgId }
 }

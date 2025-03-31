@@ -21,8 +21,8 @@ interface Booking {
   endTime: string
   type: string
   status: string
-  userId: string
-  user?: {
+  profile: {
+    id: string
     name: string
     email: string
   }
@@ -44,6 +44,7 @@ export function ScheduleView({ date }: ScheduleViewProps) {
         throw new Error("Failed to fetch bookings")
       }
       const data = await response.json()
+      console.log("Bookings data:", data) // Debug log
       setBookings(data)
     } catch (error) {
       console.error("Error fetching bookings:", error)
@@ -126,63 +127,89 @@ export function ScheduleView({ date }: ScheduleViewProps) {
     }
   }
 
-  if (!date) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Seleziona una data per vedere le prenotazioni</p>
-      </div>
-    )
-  }
-
-  const selectedDateBookings = bookings.filter(
-    (booking) => new Date(booking.date).toDateString() === date.toDateString()
-  )
+  const filteredBookings = date
+    ? bookings.filter(
+        (booking) =>
+          new Date(booking.date).toDateString() === date.toDateString()
+      )
+    : bookings
 
   return (
     <div className="space-y-4">
-      {selectedDateBookings.length === 0 ? (
-        <div className="flex items-center justify-center h-32">
-          <p className="text-muted-foreground">Nessuna prenotazione per questa data</p>
-        </div>
+      {filteredBookings.length === 0 ? (
+        <p className="text-center text-muted-foreground">
+          Nessuna prenotazione {date ? "per questa data" : ""}
+        </p>
       ) : (
-        selectedDateBookings.map((booking) => (
-          <div
-            key={booking.id}
-            className="p-4 rounded-lg border"
-          >
-            <div className="flex items-center justify-between">
-              <div>
+        <div className="grid gap-4">
+          {filteredBookings.map((booking) => (
+            <div
+              key={booking.id}
+              className="flex items-center justify-between p-4 border rounded-lg"
+            >
+              <div className="space-y-1">
                 <div className="font-medium">
+                  {new Date(booking.date).toLocaleDateString("it-IT", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </div>
+                <div className="text-sm text-muted-foreground">
                   {booking.startTime} - {booking.endTime}
                 </div>
-                <div className="mt-2 text-sm">
-                  <div className="text-muted-foreground">Cliente:</div>
-                  <div>{booking.user?.name || "Cliente non specificato"}</div>
-                  <div className="text-muted-foreground mt-1">Tipo:</div>
-                  <div>{booking.type}</div>
-                  <div className="text-muted-foreground mt-1">Stato:</div>
-                  <Badge variant={booking.status === "confirmed" ? "default" : "secondary"}>
-                    {booking.status}
+                <div className="space-y-1">
+                  <div className="text-sm font-medium">Cliente:</div>
+                  <div className="text-sm text-muted-foreground">
+                    {booking.profile?.name || "Cliente non specificato"}
+                  </div>
+                  <div className="text-sm font-medium">Tipo:</div>
+                  <div className="text-sm text-muted-foreground">
+                    {booking.type}
+                  </div>
+                  <Badge
+                    variant={
+                      booking.status === "completed"
+                        ? "default"
+                        : booking.status === "cancelled"
+                        ? "destructive"
+                        : "secondary"
+                    }
+                  >
+                    {booking.status === "pending"
+                      ? "In attesa"
+                      : booking.status === "completed"
+                      ? "Completata"
+                      : "Cancellata"}
                   </Badge>
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <Button size="icon" variant="ghost" onClick={() => handleEdit(booking)}>
-                  <Edit className="h-4 w-4" />
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleEdit(booking)}
+                >
+                  <Edit className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="ghost" onClick={() => handleDelete(booking.id)}>
-                  <Trash2 className="h-4 w-4" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(booking.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
 
       <Dialog open={!!editingBooking} onOpenChange={() => setEditingBooking(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Modifica prenotazione</DialogTitle>
+            <DialogTitle>Modifica Prenotazione</DialogTitle>
             <DialogDescription>
               Modifica i dettagli della prenotazione
             </DialogDescription>

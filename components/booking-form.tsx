@@ -60,6 +60,9 @@ export function BookingForm({ initialData, onSubmit, onCancel }: BookingFormProp
   const [dialogOpen, setDialogOpen] = useState(false)
   const { toast } = useToast()
 
+  // Aggiungiamo un ref per tenere traccia del profilo appena creato
+  const [lastCreatedProfile, setLastCreatedProfile] = useState<Profile | null>(null)
+
   useEffect(() => {
     const fetchProfiles = async () => {
       try {
@@ -69,6 +72,11 @@ export function BookingForm({ initialData, onSubmit, onCancel }: BookingFormProp
         setProfiles(data)
       } catch (error) {
         console.error("Error fetching profiles:", error)
+        toast({
+          variant: "destructive",
+          title: "Errore",
+          description: "Impossibile caricare i profili"
+        })
       }
     }
 
@@ -77,7 +85,22 @@ export function BookingForm({ initialData, onSubmit, onCancel }: BookingFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    if (!formData.userId) {
+      toast({
+        variant: "destructive",
+        title: "Errore",
+        description: "Seleziona un profilo per la prenotazione"
+      })
+      return
+    }
+
+    // Combiniamo la data con l'ora di inizio per creare una data ISO completa
+    const fullDate = new Date(formData.date + 'T' + formData.startTime)
+    
+    onSubmit({
+      ...formData,
+      date: fullDate.toISOString(),
+    })
   }
 
   const handleCreateProfile = async (profileData: any) => {
@@ -94,39 +117,45 @@ export function BookingForm({ initialData, onSubmit, onCancel }: BookingFormProp
 
       const newProfile = await response.json()
       setProfiles([...profiles, newProfile])
+      setLastCreatedProfile(newProfile) // Salviamo il profilo appena creato
+      setDialogOpen(false) // Chiudiamo la dialog
+      
+      // Selezioniamo automaticamente il nuovo profilo
       setFormData({ ...formData, userId: newProfile.id })
       
       toast({
         title: "Profilo creato",
-        description: "Il nuovo profilo è stato creato con successo",
+        description: "Il nuovo profilo è stato creato e selezionato per la prenotazione"
       })
     } catch (error) {
       console.error("Error creating profile:", error)
       toast({
-        title: "Errore",
-        description: "Impossibile creare il profilo",
         variant: "destructive",
+        title: "Errore",
+        description: "Impossibile creare il profilo"
       })
     }
   }
 
   const selectedProfile = profiles.find(p => p.id === formData.userId)
   const selectedDay = selectedProfile?.availability.find(
-    a => a.dayOfWeek === new Date(formData.date).toLocaleDateString('en-US', { weekday: 'lowercase' })
+    a => a.dayOfWeek === new Date(formData.date)
+      .toLocaleDateString('en-US', { weekday: 'long' })
+      .toLowerCase()
   )
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label htmlFor="userId">Cliente</Label>
+          <Label>Cliente</Label>
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={() => setDialogOpen(true)}
           >
-            <PlusCircle className="mr-2 h-4 w-4" />
+            <PlusCircle className="w-4 h-4 mr-2" />
             Nuovo profilo
           </Button>
         </div>
@@ -139,24 +168,12 @@ export function BookingForm({ initialData, onSubmit, onCancel }: BookingFormProp
           </SelectTrigger>
           <SelectContent>
             {profiles.map((profile) => (
-              <SelectItem key={profile.id} value={profile.id}>
-                <div className="flex items-center gap-2">
-                  {profile.image && (
-                    <img
-                      src={profile.image}
-                      alt={profile.name}
-                      className="h-6 w-6 rounded-full"
-                    />
-                  )}
-                  <div>
-                    <span>{profile.name}</span>
-                    {profile.level && (
-                      <span className="ml-2 text-sm text-muted-foreground">
-                        ({profile.level})
-                      </span>
-                    )}
-                  </div>
-                </div>
+              <SelectItem 
+                key={profile.id} 
+                value={profile.id}
+                className={lastCreatedProfile?.id === profile.id ? "bg-muted" : ""}
+              >
+                {profile.name} ({profile.email})
               </SelectItem>
             ))}
           </SelectContent>
@@ -192,53 +209,51 @@ export function BookingForm({ initialData, onSubmit, onCancel }: BookingFormProp
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="date">Data</Label>
+        <Label>Data</Label>
         <Input
-          id="date"
           type="date"
           value={formData.date}
           onChange={(e) => setFormData({ ...formData, date: e.target.value })}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="startTime">Ora inizio</Label>
-        <Input
-          id="startTime"
-          type="time"
-          value={formData.startTime}
-          onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-        />
-        {selectedDay && (formData.startTime < selectedDay.startTime || formData.startTime > selectedDay.endTime) && (
-          <p className="text-sm text-destructive">
-            L'orario selezionato è fuori dalla disponibilità del cliente ({selectedDay.startTime}-{selectedDay.endTime})
-          </p>
-        )}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Ora Inizio</Label>
+          <Input
+            type="time"
+            value={formData.startTime}
+            onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+          />
+          {selectedDay && (formData.startTime < selectedDay.startTime || formData.startTime > selectedDay.endTime) && (
+            <p className="text-sm text-destructive">
+              L'orario selezionato è fuori dalla disponibilità del cliente ({selectedDay.startTime}-{selectedDay.endTime})
+            </p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label>Ora Fine</Label>
+          <Input
+            type="time"
+            value={formData.endTime}
+            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+          />
+          {selectedDay && (formData.endTime < selectedDay.startTime || formData.endTime > selectedDay.endTime) && (
+            <p className="text-sm text-destructive">
+              L'orario selezionato è fuori dalla disponibilità del cliente ({selectedDay.startTime}-{selectedDay.endTime})
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="endTime">Ora fine</Label>
-        <Input
-          id="endTime"
-          type="time"
-          value={formData.endTime}
-          onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-        />
-        {selectedDay && (formData.endTime < selectedDay.startTime || formData.endTime > selectedDay.endTime) && (
-          <p className="text-sm text-destructive">
-            L'orario selezionato è fuori dalla disponibilità del cliente ({selectedDay.startTime}-{selectedDay.endTime})
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="type">Tipo</Label>
+        <Label>Tipo</Label>
         <Select
           value={formData.type}
           onValueChange={(value) => setFormData({ ...formData, type: value })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Seleziona il tipo" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="tennis">Tennis</SelectItem>
@@ -249,13 +264,13 @@ export function BookingForm({ initialData, onSubmit, onCancel }: BookingFormProp
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="status">Stato</Label>
+        <Label>Stato</Label>
         <Select
           value={formData.status}
           onValueChange={(value) => setFormData({ ...formData, status: value })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Seleziona lo stato" />
+            <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="pending">In attesa</SelectItem>
@@ -266,14 +281,14 @@ export function BookingForm({ initialData, onSubmit, onCancel }: BookingFormProp
         </Select>
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end space-x-2">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
             Annulla
           </Button>
         )}
         <Button type="submit">
-          {initialData ? "Aggiorna" : "Crea"}
+          {initialData ? "Aggiorna" : "Crea"} Prenotazione
         </Button>
       </div>
 

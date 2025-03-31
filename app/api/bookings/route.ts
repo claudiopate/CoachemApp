@@ -1,6 +1,8 @@
+"use server"
+
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { getAuth } from "@/lib/auth"
+import { getAuth, getCurrentProfile } from "@/lib/auth"
 
 // GET /api/bookings - Lista prenotazioni
 export async function GET() {
@@ -12,8 +14,7 @@ export async function GET() {
         organizationId: orgId,
       },
       include: {
-        user: true,
-        coach: true,
+        profile: true,
       },
       orderBy: {
         date: 'asc'
@@ -23,51 +24,51 @@ export async function GET() {
     return NextResponse.json(bookings)
   } catch (error) {
     console.error("[BOOKINGS_GET]", error)
-    return new NextResponse("Internal error", { status: 500 })
+    return new NextResponse("Internal Server Error", { status: 500 })
   }
 }
 
 // POST /api/bookings - Crea prenotazione
 export async function POST(req: Request) {
   try {
-    const { orgId, userId } = await getAuth()
+    const { orgId } = await getAuth()
     const body = await req.json()
 
-    // Ottieni il profilo del coach (utente corrente)
-    const coachProfile = await db.profile.findUnique({
-      where: { userId }
-    })
+    const { date, startTime, endTime, type, userId } = body
 
-    if (!coachProfile) {
-      return new NextResponse("Coach profile not found", { status: 404 })
+    if (!date || !startTime || !endTime || !type || !userId) {
+      return new NextResponse("Missing required fields", { status: 400 })
     }
 
-    // Ottieni il profilo del cliente
-    const userProfile = await db.profile.findUnique({
-      where: { id: body.userId }
-    })
+    // Usa getCurrentProfile per trovare il profilo
+    const profile = await getCurrentProfile()
 
-    if (!userProfile) {
-      return new NextResponse("User profile not found", { status: 404 })
+    if (!profile) {
+      console.error("[PROFILE_NOT_FOUND]", { userId, orgId })
+      return new NextResponse("Profile not found", { status: 404 })
     }
 
-    // Crea la prenotazione
     const booking = await db.booking.create({
       data: {
-        date: new Date(body.date),
-        startTime: body.startTime,
-        endTime: body.endTime,
-        type: body.type,
-        status: body.status,
-        userId: userProfile.userId,
-        coachId: coachProfile.userId,
+        date: new Date(date),
+        startTime,
+        endTime,
+        type,
+        profileId: profile.id,
         organizationId: orgId,
+        status: body.status || "pending"
+      },
+      include: {
+        profile: true
       }
     })
 
     return NextResponse.json(booking)
-  } catch (error) {
-    console.error("[BOOKING_POST]", error)
-    return new NextResponse("Internal error", { status: 500 })
+  } catch (error: any) {
+    console.error("[BOOKINGS_POST]", error)
+    if (error?.message === "Profile not found") {
+      return new NextResponse(error.message, { status: 404 })
+    }
+    return new NextResponse("Internal Server Error", { status: 500 })
   }
 }
