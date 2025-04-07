@@ -3,10 +3,8 @@ import { db } from "@/lib/db"
 import { getAuth } from "@/lib/auth"
 
 // GET /api/profiles/[profileId] - Ottieni profilo
-export async function GET(
-  req: Request,
-  { params }: { params: { profileId: string } }
-) {
+export async function GET(req: Request, props: { params: Promise<{ profileId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = await getAuth()
 
@@ -34,10 +32,8 @@ export async function GET(
 }
 
 // PATCH /api/profiles/[profileId] - Aggiorna profilo
-export async function PATCH(
-  req: Request,
-  { params }: { params: { profileId: string } }
-) {
+export async function PATCH(req: Request, props: { params: Promise<{ profileId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = await getAuth()
     const values = await req.json()
@@ -60,10 +56,8 @@ export async function PATCH(
 }
 
 // PUT /api/profiles/[profileId] - Aggiorna profilo
-export async function PUT(
-  req: Request,
-  { params }: { params: { profileId: string } }
-) {
+export async function PUT(req: Request, props: { params: Promise<{ profileId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = await getAuth()
     const body = await req.json()
@@ -92,10 +86,8 @@ export async function PUT(
 }
 
 // DELETE /api/profiles/[profileId] - Elimina profilo
-export async function DELETE(
-  req: Request,
-  { params }: { params: { profileId: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ profileId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = await getAuth()
 

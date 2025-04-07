@@ -7,9 +7,9 @@ export default function SignInPage() {
         path="/login"
         routing="path"
         signUpUrl="/sign-up"
-        afterSignInUrl="/dashboard"
-        redirectUrl="/dashboard"
+        afterSignIn="/dashboard"
+        redirectUrl={undefined} // Rimuovi redirectUrl che può causare un loop
       />
     </div>
   )
-} 
+}

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -28,7 +28,8 @@ interface Profile {
   progressRecords: any[]
 }
 
-export default function ProfilePage({ params }: { params: { profileId: string } }) {
+export default function ProfilePage(props: { params: Promise<{ profileId: string }> }) {
+  const params = use(props.params);
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)

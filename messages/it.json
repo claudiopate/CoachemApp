@@ -24,7 +24,7 @@
     "calendar": "Calendario",
     "bookings": "Prenotazioni",
     "profiles": "Profili",
-    "aiAssistant": "Assistente AI"
+    "aiAssistant": "Assistente IA"
   },
   "profile": {
     "name": "Nome",
@@ -44,8 +44,14 @@
     "status": "Stato"
   },
   "errors": {
-    "unauthorized": "Non autorizzato",
-    "internalError": "Errore interno",
-    "invalidInput": "Input non valido"
-  }
+    "unauthorized": "Non Autorizzato",
+    "internalError": "Errore Interno",
+    "invalidInput": "Input Non Valido"
+  },
+  "appName": "Coachem",
+  "headline": "Trasforma il tuo Business di Coaching",
+  "subheadline": "La piattaforma all-in-one per coach professionisti",
+  "getStarted": "Inizia Ora",
+  "learnMore": "Scopri di Più",
+  "loginTitle": "Accedi al tuo account"
 }

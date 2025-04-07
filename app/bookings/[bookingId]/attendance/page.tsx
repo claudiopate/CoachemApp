@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -35,7 +35,8 @@ interface Booking {
   }
 }
 
-export default function AttendancePage({ params }: { params: { bookingId: string } }) {
+export default function AttendancePage(props: { params: Promise<{ bookingId: string }> }) {
+  const params = use(props.params);
   const [booking, setBooking] = useState<Booking | null>(null)
   const [status, setStatus] = useState("present")
   const [notes, setNotes] = useState("")

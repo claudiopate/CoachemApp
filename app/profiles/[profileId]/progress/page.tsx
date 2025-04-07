@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -22,7 +22,8 @@ interface Profile {
   level: string | null
 }
 
-export default function ProgressPage({ params }: { params: { profileId: string } }) {
+export default function ProgressPage(props: { params: Promise<{ profileId: string }> }) {
+  const params = use(props.params);
   const [profile, setProfile] = useState<Profile | null>(null)
   const [progressRecords, setProgressRecords] = useState<Progress[]>([])
   const [date, setDate] = useState<Date | undefined>(new Date())

@@ -3,10 +3,7 @@ import { db } from "@/lib/db"
 import { getAuth } from "@/lib/auth"
 
 // GET /api/attendance/[attendanceId] - Ottieni presenza
-export async function GET(
-  req: Request,
-  { params }: { params: { attendanceId: string } }
-) {
+export async function GET(req: Request, { params }: { params: { attendanceId: string } }) {
   try {
     const { orgId } = getAuth()
 
@@ -25,6 +22,11 @@ export async function GET(
       }
     })
 
+    // Gestire il caso in cui non venga trovata la presenza
+    if (!attendance) {
+      return new NextResponse("Attendance not found", { status: 404 })
+    }
+
     return NextResponse.json(attendance)
   } catch (error) {
     console.error("[ATTENDANCE_GET]", error)
@@ -33,10 +35,7 @@ export async function GET(
 }
 
 // PATCH /api/attendance/[attendanceId] - Aggiorna presenza
-export async function PATCH(
-  req: Request,
-  { params }: { params: { attendanceId: string } }
-) {
+export async function PATCH(req: Request, { params }: { params: { attendanceId: string } }) {
   try {
     const { orgId } = getAuth()
     const values = await req.json()
@@ -59,10 +58,7 @@ export async function PATCH(
 }
 
 // DELETE /api/attendance/[attendanceId] - Elimina presenza
-export async function DELETE(
-  req: Request,
-  { params }: { params: { attendanceId: string } }
-) {
+export async function DELETE(req: Request, { params }: { params: { attendanceId: string } }) {
   try {
     const { orgId } = getAuth()
 

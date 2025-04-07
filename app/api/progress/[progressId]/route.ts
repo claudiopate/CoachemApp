@@ -3,10 +3,8 @@ import { db } from "@/lib/db"
 import { getAuth } from "@/lib/auth"
 
 // GET /api/progress/[progressId] - Ottieni progresso
-export async function GET(
-  req: Request,
-  { params }: { params: { progressId: string } }
-) {
+export async function GET(req: Request, props: { params: Promise<{ progressId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = getAuth()
 
@@ -28,10 +26,8 @@ export async function GET(
 }
 
 // PATCH /api/progress/[progressId] - Aggiorna progresso
-export async function PATCH(
-  req: Request,
-  { params }: { params: { progressId: string } }
-) {
+export async function PATCH(req: Request, props: { params: Promise<{ progressId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = getAuth()
     const values = await req.json()
@@ -54,10 +50,8 @@ export async function PATCH(
 }
 
 // DELETE /api/progress/[progressId] - Elimina progresso
-export async function DELETE(
-  req: Request,
-  { params }: { params: { progressId: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ progressId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = getAuth()
 

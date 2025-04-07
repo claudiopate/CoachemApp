@@ -3,10 +3,8 @@ import { db } from "@/lib/db"
 import { getAuth } from "@/lib/auth"
 
 // GET /api/bookings/[bookingId] - Ottieni prenotazione
-export async function GET(
-  req: Request,
-  { params }: { params: { bookingId: string } }
-) {
+export async function GET(req: Request, props: { params: Promise<{ bookingId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = await getAuth()
 
@@ -30,10 +28,8 @@ export async function GET(
 }
 
 // PATCH /api/bookings/[bookingId] - Aggiorna prenotazione
-export async function PATCH(
-  req: Request,
-  { params }: { params: { bookingId: string } }
-) {
+export async function PATCH(req: Request, props: { params: Promise<{ bookingId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = await getAuth()
     const values = await req.json()
@@ -56,10 +52,8 @@ export async function PATCH(
 }
 
 // PUT /api/bookings/[bookingId] - Aggiorna prenotazione
-export async function PUT(
-  req: Request,
-  { params }: { params: { bookingId: string } }
-) {
+export async function PUT(req: Request, props: { params: Promise<{ bookingId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = await getAuth()
     const body = await req.json()
@@ -86,10 +80,8 @@ export async function PUT(
 }
 
 // DELETE /api/bookings/[bookingId] - Elimina prenotazione
-export async function DELETE(
-  req: Request,
-  { params }: { params: { bookingId: string } }
-) {
+export async function DELETE(req: Request, props: { params: Promise<{ bookingId: string }> }) {
+  const params = await props.params;
   try {
     const { orgId } = await getAuth()
 

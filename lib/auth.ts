@@ -70,7 +70,7 @@ export async function requireProfile() {
 
 export async function getAuth() {
   try {
-    const session = await auth()
+    const session = auth()
     const { userId, orgId } = session
 
     if (!userId || !orgId) {

@@ -5,7 +5,7 @@
       "english": "English"
     },
     "welcome": "Welcome",
-    "login": "Login",
+    "login": "Log In",
     "signup": "Sign Up",
     "logout": "Logout",
     "dashboard": "Dashboard",
@@ -47,5 +47,11 @@
     "unauthorized": "Unauthorized",
     "internalError": "Internal Error",
     "invalidInput": "Invalid Input"
-  }
+  },
+  "appName": "Coachem",
+  "headline": "Transform Your Coaching Business",
+  "subheadline": "The all-in-one platform for professional coaches",
+  "getStarted": "Get Started",
+  "learnMore": "Learn More",
+  "loginTitle": "Log in to your account"
 }

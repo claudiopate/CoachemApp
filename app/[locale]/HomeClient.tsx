@@ -6,28 +6,13 @@ import { ArrowRight, TurtleIcon as TennisBall } from "lucide-react";
 import { useState } from "react";
 import { SignIn } from "@clerk/nextjs";
 import { useTranslations } from 'next-intl';
-import React from "react";
 
 interface HomeClientProps {
   locale: string;
 }
 
-// Create a separate client component for SignIn
-const SignInComponent = ({ setShowSignIn }: { setShowSignIn: (value: boolean) => void }) => {
-  const t = useTranslations();
-  return (
-    <div className="bg-white p-8 rounded shadow-lg">
-      <SignIn />
-      <Button onClick={() => setShowSignIn(false)} className="mt-4">
-        {t("common.cancel")}
-      </Button>
-    </div>
-  );
-};
-
 export default function HomeClient({ locale }: HomeClientProps) {
   const t = useTranslations();
-  const [showSignIn, setShowSignIn] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -38,13 +23,11 @@ export default function HomeClient({ locale }: HomeClientProps) {
             <span className="text-2xl font-bold gradient-heading">{t('appName')}</span>
           </div>
           <nav className="flex items-center gap-6">
-            <Button onClick={() => setShowSignIn(true)} variant="ghost" size="lg" className="text-base font-medium">
-              {t('common.login')}
-            </Button>
+            <Link href={`/${locale}/login`}>
+              <Button variant="ghost" size="lg" className="text-base font-medium">{t('login')}</Button>
+            </Link>
             <Link href={`/${locale}/sign-up`}>
-              <Button size="lg" className="text-base font-medium">
-                {t('common.signup')}
-              </Button>
+              <Button size="lg" className="text-base font-medium">{t('signUp')}</Button>
             </Link>
           </nav>
         </div>
@@ -79,12 +62,6 @@ export default function HomeClient({ locale }: HomeClientProps) {
           </div>
         </section>
       </main>
-      {showSignIn && (
-        <div>
-          <div className="fixed inset-0 flex items-center justify-center bg-black/50"></div>
-          <SignInComponent setShowSignIn={setShowSignIn} />
-        </div>
-      )}
     </div>
   );
 }

@@ -35,6 +35,7 @@ model Profile {
   @@map("profiles")
 }
 
+
 model Availability {
   id        String   @id @default(cuid())
   dayOfWeek String
@@ -50,6 +51,7 @@ model Availability {
   @@index([dayOfWeek])
   @@map("availability")
 }
+
 
 model Booking {
   id             String   @id @default(cuid())
@@ -68,4 +70,18 @@ model Booking {
   @@index([organizationId])
   @@index([date])
   @@map("bookings")
+}
+
+model Attendance {
+  id             String   @id @default(cuid())
+  organizationId String
+  bookingId      String
+  status         String   @default("pending")
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([bookingId])
+  @@map("attendances")
 }
