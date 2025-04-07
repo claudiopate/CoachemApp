@@ -1,0 +1,51 @@
+{
+  "common": {
+    "language": {
+      "italian": "Italiano",
+      "english": "Inglese"
+    },
+    "welcome": "Benvenuto",
+    "login": "Accedi",
+    "signup": "Registrati",
+    "logout": "Esci",
+    "dashboard": "Dashboard",
+    "profile": "Profilo",
+    "settings": "Impostazioni",
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "edit": "Modifica",
+    "create": "Crea",
+    "search": "Cerca"
+  },
+  "dashboard": {
+    "overview": "Panoramica",
+    "members": "Membri",
+    "calendar": "Calendario",
+    "bookings": "Prenotazioni",
+    "profiles": "Profili",
+    "aiAssistant": "Assistente AI"
+  },
+  "profile": {
+    "name": "Nome",
+    "email": "Email",
+    "phone": "Telefono",
+    "level": "Livello",
+    "preferredSport": "Sport Preferito",
+    "notes": "Note",
+    "availability": "Disponibilità"
+  },
+  "booking": {
+    "newBooking": "Nuova Prenotazione",
+    "date": "Data",
+    "time": "Ora",
+    "duration": "Durata",
+    "type": "Tipo",
+    "status": "Stato"
+  },
+  "errors": {
+    "unauthorized": "Non autorizzato",
+    "internalError": "Errore interno",
+    "invalidInput": "Input non valido"
+  }
+}
